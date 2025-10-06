@@ -1,0 +1,107 @@
+# =====================================
+# 🧠 AI Web Navigator Backend .gitignore
+# =====================================
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 📦 Virtual environments
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# 🧠 Ollama runtime
+ollama/
+ollama.exe
+ollama-data/
+ollama-models/
+models/
+blobs/
+manifests/
+.cache/ollama/
+
+
+# 🔧 IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 🗃️ Databases & Data Outputs
+data/
+*.db
+*.sqlite3
+*.sqlite
+
+# ✅ Keep schema file if needed
+# !data/schema.sql   # uncomment if you want to track schema only
+
+# 🧪 Playwright cache & test artifacts
+playwright-report/
+playwright/.cache/
+test-results/
+*.log
+
+# 🧰 Runtime / temporary files
+runs/
+exports/
+logs/
+tmp/
+__temp__/
+__cache__/
+.DS_Store
+Thumbs.db
+
+# 📸 Screenshots & media captures
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# 🔐 Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+
+# ⚙️ Build outputs (if Docker or pyinstaller used)
+dist/
+build/
+*.spec
+
+# 🚀 Docker
+Dockerfile~
+docker-compose.override.yml
+.dockerignore
+
+# 🧾 Notebooks
+*.ipynb_checkpoints
+
+# 🔍 Coverage / testing
+htmlcov/
+.tox/
+.coverage
+coverage.xml
+*.cover
+.cache/
+nosetests.xml
+test-results.xml
+
+# 🪄 Editor backups
+*~
+*.bak
+*.tmp
+
+# =========================
+# ✅ End of .gitignore file
+# =========================

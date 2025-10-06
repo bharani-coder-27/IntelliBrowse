@@ -1,0 +1,28 @@
+AI Web Navigator/
+├─ requirements.txt
+├─ agent.py                         # CLI: give natural instruction; runs LLM ➜ extractors ➜ saves data
+├─ data/                            # auto-created; holds .json & .csv outputs
+├─ runs/                            # screenshots/html dumps during browsing
+└─ app/
+   ├─ api/
+   │  └─ server.py                  # (optional) FastAPI API; you can skip if you only want CLI
+   ├─ browser/
+   │  └─ controller.py              # your existing BrowserController
+   ├─ llm/
+   │  ├─ provider.py                # unified LLM client (Ollama-first, supports OpenAI)
+   │  ├─ prompts.py                 # system + user prompt
+   │  └─ planner.py                 # instruction ➜ SearchPlan
+   ├─ schemas/
+   │  ├─ plan.py                    # SearchPlan models
+   │  └─ search.py                  # (kept for API parity; optional)
+   ├─ services/
+   │  ├─ aggregator.py              # executes extractors per source; merges/sorts
+   │  └─ utils.py                   # dedupe/sort helpers + file save helpers
+   ├─ skills/
+   │  └─ extractors/
+   │     ├─ __init__.py            # unified extract_products()
+   │     ├─ amazon.py              # your final working Amazon extractor
+   │     └─ flipkart.py            # your final working Flipkart extractor
+   └─ utils/
+      ├─ logger.py                  # logger
+      └─ money.py                   # parse_price_to_int

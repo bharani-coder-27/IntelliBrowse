@@ -1,0 +1,19 @@
+client/
+├─ index.html
+├─ package.json
+├─ tailwind.config.ts
+├─ vite.config.ts
+└─ src/
+   ├─ main.tsx
+   ├─ App.tsx
+   ├─ index.css
+   ├─ lib/api.ts
+   ├─ store/ui.ts
+   ├─ components/
+   │  ├─ SearchDock.tsx
+   │  ├─ ProductCard.tsx
+   │  ├─ ResultsGrid.tsx
+   │  ├─ SourceSelector.tsx
+   │  ├─ ThemeToggle.tsx
+   │  └─ LoadingDots.tsx
+   └─ types/product.ts
