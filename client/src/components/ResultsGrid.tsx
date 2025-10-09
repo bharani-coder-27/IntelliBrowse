@@ -1,50 +1,114 @@
+// src/components/ResultsGrid.tsx
+import { useState } from "react";
 import { motion } from "framer-motion";
-import type { Product } from "../types/product";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import ProductCard from "./ProductCard";
+import type { Product, ProductRecord } from "../types/product";
+import { useSearch } from "../context/SearchContext";
 
-export default function ResultsGrid({ items }: { items: Product[] }) {
-  const fallbackImage = "/assets/sample-product.jpg";
+interface ResultsGridProps {
+  items?: (Product | ProductRecord)[];
+}
+
+export default function ResultsGrid({ items }: ResultsGridProps) {
+  const { products } = useSearch();
+  const navigate = useNavigate();
+
+  // use items from props if given, else from context
+  const productList = items && items.length ? items : products;
+
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIdxs, setSelectedIdxs] = useState<number[]>([]);
+
+  const toggleSelect = (idx: number) => {
+    setSelectedIdxs((prev) =>
+      prev.includes(idx) ? prev.filter((x) => x !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleSelectionMode = () => {
+    setSelectionMode((prev) => !prev);
+    setSelectedIdxs([]);
+  };
+
+  const handleCompare = () => {
+    if (selectedIdxs.length < 2) {
+      toast.error("Select at least two products to compare.");
+      return;
+    }
+
+    // ✅ Extract product IDs (if present) or use index fallback
+    const idsToSend = selectedIdxs.map((i) => {
+      const product = productList[i] as ProductRecord;
+      return product.id ?? i; // fallback if no DB id
+    });
+
+    navigate("/compare", { state: { selectedIds: idsToSend } });
+  };
+
+  if (!productList.length) {
+    return (
+      <div className="flex items-center justify-center h-[60vh] text-slate-400">
+        <p>No products available. Try searching again.</p>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      layout
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-    >
-      {items.map((p, i) => (
-        <motion.a
-          key={i}
-          href={p.link}
-          target="_blank"
-          rel="noreferrer"
-          whileHover={{ y: -5, scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 200, damping: 10 }}
-          className="group card overflow-hidden flex flex-col bg-white/5 dark:bg-slate-800/40 rounded-2xl border border-white/10 hover:border-cyan-400/40 hover:shadow-[0_0_20px_rgba(56,189,248,0.15)]"
-        >
-          <div className="relative h-48 overflow-hidden">
-            <img
-              src={p.image || fallbackImage}
-              alt={p.title}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition" />
-          </div>
+    <div className="mt-10">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSelectionMode}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              selectionMode
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-cyan-500 hover:bg-cyan-600 text-white"
+            }`}
+          >
+            {selectionMode ? "Cancel Selection" : "Select for Compare"}
+          </button>
+          {selectionMode && (
+            <p className="text-sm text-slate-400">
+              {selectedIdxs.length} selected
+            </p>
+          )}
+        </div>
 
-          <div className="p-4 flex flex-col gap-1">
-            <div className="text-xs uppercase text-slate-400">
-              {p.site || "Store"}
-            </div>
-            <div className="font-semibold text-slate-100 line-clamp-2 group-hover:text-cyan-400 transition">
-              {p.title}
-            </div>
-            <div className="text-lg font-bold text-cyan-400">{p.price}</div>
-            <div className="text-sm text-slate-400">
-              {p.rating || "No rating"}
-            </div>
-          </div>
-        </motion.a>
-      ))}
-    </motion.div>
+        {selectionMode && (
+          <button
+            onClick={handleCompare}
+            disabled={selectedIdxs.length < 2}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              selectedIdxs.length < 2
+                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white"
+            }`}
+          >
+            Compare
+          </button>
+        )}
+      </div>
+
+      <motion.div
+        layout
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        {productList.map((p, i) => (
+          <ProductCard
+            key={(p as ProductRecord).id ?? i}
+            p={p}
+            i={i}
+            selected={selectedIdxs.includes(i)}
+            selectionMode={selectionMode}
+            onSelect={toggleSelect}
+          />
+        ))}
+      </motion.div>
+    </div>
   );
 }

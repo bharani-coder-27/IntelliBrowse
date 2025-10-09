@@ -54,3 +54,27 @@
 @utility card {
   @apply rounded-2xl bg-white/10 dark:bg-slate-800/40 backdrop-blur border border-white/20;
 }
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out forwards;
+}
+
+/* smooth scrollbar for horizontal compare view */
+::-webkit-scrollbar {
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+}
+

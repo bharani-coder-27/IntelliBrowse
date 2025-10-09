@@ -1,11 +1,11 @@
-// src/App.tsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useSearch } from "./context/SearchContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ThemeToggle";
 import SearchDock from "./components/SearchDock";
 import ResultsGrid from "./components/ResultsGrid";
 import ResultsList from "./components/ResultsList";
-import type { Product } from "./types/product";
+import type { Product, ProductRecord } from "./types/product";
 import type { ResearchResult } from "./types/research";
 import type { SearchResponse } from "./types/api";
 
@@ -13,12 +13,15 @@ type SearchMode = "product" | "research";
 
 export default function App() {
   const [mode, setMode] = useState<SearchMode>("product");
-  const [items, setItems] = useState<Product[]>([]);
   const [researchItems, setResearchItems] = useState<ResearchResult[]>([]);
-
-  const hasResults =
-    (mode === "product" && items.length > 0) ||
-    (mode === "research" && researchItems.length > 0);
+  const {
+    hasResults,
+    setHasResults,
+    products,
+    setProducts,
+    isSessionActive,
+    setIsSessionActive,
+  } = useSearch();
 
   const messages = [
     "Ask anything, learn everything 🌍",
@@ -36,73 +39,88 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ handle backend data properly
+  // ✅ Reset only if it's first load in this session
+  useEffect(() => {
+    if (!isSessionActive) {
+      setHasResults(false);
+      setProducts([]);
+    }
+  }, [isSessionActive, setHasResults, setProducts]);
+
+  // ✅ handle backend results
   const handleResults = (data: SearchResponse) => {
-    console.log("📥 Full backend response:", data);
     const intent = data?.plan?.intent;
-    const results = (data.items || data.results || []) as
+    const rawResults = (data.items || data.results || []) as
       | ResearchResult[]
       | Product[];
+    const rawIds = data.product_ids ?? [];
+
+    setHasResults(rawResults.length > 0);
+    setIsSessionActive(true);
 
     if (intent === "explore" || intent === "learn") {
       setMode("research");
-      setResearchItems(results as ResearchResult[]);
+      setResearchItems(rawResults as ResearchResult[]);
     } else {
       setMode("product");
-      setItems(results as Product[]);
+
+      // ✅ Merge product_ids with items
+      const merged: ProductRecord[] = (rawResults as Product[]).map((p, i) => ({
+        ...p,
+        id: rawIds[i] ?? i + 1,
+      }));
+
+      console.log("✅ Merged products:", merged);
+      setProducts(merged);
     }
   };
 
   return (
     <div className="relative min-h-screen flex flex-col items-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      {/* 🌙 Theme toggle */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-4">
         <ThemeToggle />
       </div>
 
-      {/* 💫 Animated glow */}
       <motion.div
         className="absolute w-[900px] h-[900px] rounded-full blur-[180px] bg-gradient-to-tr from-indigo-500 via-fuchsia-500 to-cyan-400 opacity-25 top-1/3 left-1/2 -translate-x-1/2"
         animate={{ y: [0, -20, 0] }}
         transition={{ repeat: Infinity, duration: 8 }}
       />
 
-      {/* 🌈 HERO SECTION */}
+      {/* HERO */}
       <motion.div
         className="relative flex flex-col items-center justify-center mt-28 space-y-8 text-center"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        {/* IntelliBrowse shimmer text */}
-        <motion.div
-          className={`flex items-center gap-2 z-40 ${
-            hasResults ? "fixed top-6 left-10" : "relative"
-          }`}
-          initial={{ scale: 1, y: 0 }}
-          animate={hasResults ? { scale: 0.7 } : { scale: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 16 }}
-        >
-          <h1 className="font-extrabold shimmer-text text-4xl sm:text-6xl select-none">
-            IntelliBrowse
-          </h1>
-        </motion.div>
-
-        {/* Headline */}
-        <AnimatePresence mode="wait">
-          {!hasResults && (
-            <motion.h2
-              key={messages[index]}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.6 }}
-              className="text-2xl sm:text-3xl font-semibold text-slate-200"
+        {!hasResults && (
+          <>
+            <motion.div
+              className="flex items-center gap-2 z-40 relative"
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 14 }}
             >
-              {messages[index]}
-            </motion.h2>
-          )}
-        </AnimatePresence>
+              <h1 className="font-extrabold shimmer-text text-4xl sm:text-6xl select-none">
+                IntelliBrowse
+              </h1>
+            </motion.div>
+
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={messages[index]}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.6 }}
+                className="text-2xl sm:text-3xl font-semibold text-slate-200"
+              >
+                {messages[index]}
+              </motion.h2>
+            </AnimatePresence>
+          </>
+        )}
 
         <div className="flex flex-col items-center space-y-8 z-40 relative">
           <SearchDock onResults={handleResults} docked={hasResults} />
@@ -126,7 +144,7 @@ export default function App() {
         </div>
       </motion.div>
 
-      {/* 🧾 RESULTS SECTION */}
+      {/* RESULTS */}
       <motion.main
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -135,7 +153,9 @@ export default function App() {
           hasResults ? "mt-[14vh]" : "mt-[60vh]"
         } pb-32`}
       >
-        {mode === "product" && items.length > 0 && <ResultsGrid items={items} />}
+        {mode === "product" && products.length > 0 && (
+          <ResultsGrid items={products} />
+        )}
         {mode === "research" && researchItems.length > 0 && (
           <ResultsList results={researchItems} />
         )}

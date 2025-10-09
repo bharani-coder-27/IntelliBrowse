@@ -17,6 +17,11 @@ export interface SearchResponse {
   csv_path?: string;
   download_json?: string;
   download_csv?: string;
+
+  // ✅ new field from backend for DB product IDs
+  product_ids?: number[];
+
+  // ✅ result arrays
   results?: Product[] | ResearchResult[];
-  items?: Product[] | ResearchResult[]; // ✅ backend returns items
+  items?: Product[] | ResearchResult[];
 }

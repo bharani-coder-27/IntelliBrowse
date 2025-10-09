@@ -1,4 +1,3 @@
-// src/types/product.ts
 export type Product = {
   title: string;
   price: string;
@@ -6,5 +5,20 @@ export type Product = {
   rating?: string;
   link: string;
   site?: "amazon" | "flipkart";
-  image?: string | null; // ✅ added optional image field
+  image?: string | null;
+};
+
+// ✅ DB version (with id + optional extras)
+export type ProductRecord = Product & {
+  id: number;
+  source?: string;
+  specs?: string | null;
+};
+
+// ✅ Compare API response type
+export type CompareResponse = {
+  total_compared: number;
+  products: ProductRecord[];
+  summary?: string;
+  message?: string;
 };

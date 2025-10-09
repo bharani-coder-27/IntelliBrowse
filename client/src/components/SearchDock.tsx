@@ -3,9 +3,11 @@ import { motion } from "framer-motion";
 import LoadingDots from "./LoadingDots";
 import { Search } from "lucide-react";
 import type { SearchResponse } from "../types/api";
-import { orchestrate } from "../lib/api";
+import { orchestrate } from "../lib/api/orchestrate";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+import { useSearch } from "../context/SearchContext";
+import type { Product, ProductRecord } from "../types/product";
 
 export default function SearchDock({
   onResults,
@@ -17,52 +19,81 @@ export default function SearchDock({
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
 
-const submit = async () => {
-  if (!q.trim()) {
-    toast.warning("Please enter something to search.");
-    return;
-  }
+  const { setProducts, setHasResults, setLastResponse } = useSearch();
 
-  setLoading(true);
-  const loadingToast = toast.loading("Fetching results...");
+  const submit = async () => {
+    if (!q.trim()) {
+      toast.warning("Please enter something to search.");
+      return;
+    }
 
-  try {
-    const res = await orchestrate(q); // ← This internally calls axios
-    const data: SearchResponse = res;
-    onResults(data);
+    setLoading(true);
+    const loadingToast = toast.loading("Fetching results...");
 
-    toast.success("✅ Results loaded successfully!", { id: loadingToast });
-  } catch (err: unknown) {
-    // ✅ Proper AxiosError handling
-    const error = err as AxiosError<{ detail?: string }>;
+    try {
+      // 🔹 Call backend
+      const res = await orchestrate(q);
+      const data: SearchResponse = res;
 
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 503) {
-        toast.error("⚠️ Network is down or target sites unreachable.", {
-          id: loadingToast,
-        });
-      } else if (error.response?.status === 500) {
-        toast.error("❌ Server error — please try again later.", {
-          id: loadingToast,
-        });
-      } else {
+      // ------------------------------
+      // ✅ Type-safe array extraction
+      // ------------------------------
+      const rawIds: number[] = data.product_ids ?? [];
+
+      // 🧠 Type guard for product arrays
+      const isProductArray = (arr: unknown): arr is Product[] =>
+        Array.isArray(arr) &&
+        arr.length > 0 &&
+        typeof (arr[0] as Product).title === "string" &&
+        typeof (arr[0] as Product).price === "string";
+
+      // Safely determine items source
+      const rawItems: Product[] = isProductArray(data.items)
+        ? data.items
+        : isProductArray(data.results)
+        ? data.results
+        : [];
+
+      // ✅ Merge products with DB IDs
+      const mergedProducts: ProductRecord[] = rawItems.map((item, i) => ({
+        ...item,
+        id: rawIds[i] ?? i + 1, // fallback if backend missing some IDs
+      }));
+
+      console.log("✅ Merged products:", mergedProducts);
+
+      // ✅ Save globally
+      setLastResponse(data);
+      setProducts(mergedProducts);
+      setHasResults(mergedProducts.length > 0);
+
+      // ✅ Notify parent if needed
+      onResults(data);
+
+      toast.success("✅ Results loaded successfully!", { id: loadingToast });
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ detail?: string }>;
+
+      // Axios-based errors
+      if (axios.isAxiosError(error)) {
         const msg =
           error.response?.data?.detail ||
           error.message ||
           "❌ Something went wrong.";
         toast.error(msg, { id: loadingToast });
       }
-    } else {
-      toast.error("❌ Unknown error occurred.", { id: loadingToast });
+      // Other runtime or parsing errors
+      else if (err instanceof Error) {
+        toast.error(`❌ ${err.message}`, { id: loadingToast });
+        console.error("Non-Axios error:", err);
+      }
+      // Fallback safety
+      else {
+        toast.error("❌ Unknown error occurred.", { id: loadingToast });
+        console.error("Unrecognized error:", err);
+      }
     }
-
-    console.error("Search error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <motion.div
@@ -82,7 +113,6 @@ const submit = async () => {
             className="input-base flex-1 px-2 py-1 text-sm sm:text-base"
           />
 
-          {/* Hide blue button when loading */}
           {loading ? (
             <div className="flex items-center justify-center px-4 py-2">
               <LoadingDots />

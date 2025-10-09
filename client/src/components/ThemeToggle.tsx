@@ -1,16 +1,15 @@
-// src/components/ThemeToggle.tsx
 import { Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState(
-    localStorage.getItem("theme") ?? "light"
-  );
+  const [theme, setTheme] = useState(localStorage.getItem("theme") ?? "light");
 
   useEffect(() => {
     const html = document.documentElement;
     html.classList.toggle("dark", theme === "dark");
+    document.body.style.backgroundColor =
+      theme === "dark" ? "#0f172a" : "#f9fafb"; // ✅ prevent scrollbar flash
     localStorage.setItem("theme", theme);
   }, [theme]);
 
