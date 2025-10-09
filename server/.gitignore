@@ -73,6 +73,7 @@ screenshots/
 *.pem
 *.key
 *.crt
+client_secret_*.json
 
 # ⚙️ Build outputs (if Docker or pyinstaller used)
 dist/
