@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api", tags=["Search"])
 
 
 @router.post("/orchestrate")
-def orchestrate(body: dict, user_id: int = Depends(get_current_user)):
+def orchestrate(body: dict, user_id: int = Depends(get_current_user)):   # int = Depends(get_current_user)
     """
     Orchestrates the AI web navigation flow:
     1. Generate plan from LLM
@@ -73,6 +73,8 @@ def orchestrate(body: dict, user_id: int = Depends(get_current_user)):
             # 3️⃣ Step — Web/info extraction (no browser)
             for src in plan["sources"]:
                 results += extract_products_or_info(None, src, plan["query"], plan["max_results"])
+        
+        print("The First Result Response: ", results[0])
 
         if not results:
             print("⚠️ No results fetched for:", plan["query"])

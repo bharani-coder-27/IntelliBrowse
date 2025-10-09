@@ -36,6 +36,7 @@ def add_search(session: Session, plan: dict, results: list[dict], user_id: Optio
     sources_value: Optional[str] = ",".join(plan.get("sources", [])) if plan.get("sources") else None
     instruction_value: Optional[str] = plan.get("instruction")
 
+    # ✅ Create Search entry
     search = Search(
         user_id=user_id,
         instruction=instruction_value,
@@ -47,21 +48,21 @@ def add_search(session: Session, plan: dict, results: list[dict], user_id: Optio
     session.commit()
     session.refresh(search)
 
-    # Save all extracted products linked to this search
+    # ✅ Insert each product and safely map site/link fields
     for r in results:
         product = Product(
             search_id=search.id,
             title=r.get("title", "N/A"),
             price=r.get("price"),
             rating=r.get("rating"),
-            url=r.get("url"),
-            source=r.get("source"),
+            url=r.get("link") or r.get("url"),   # ✅ map 'link' → 'url'
+            source=r.get("site") or r.get("source"),  # ✅ map 'site' → 'source'
             image=r.get("image"),
             specs=r.get("specs"),
         )
         session.add(product)
-    session.commit()
 
+    session.commit()
     return search
 
 

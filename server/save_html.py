@@ -1,7 +1,7 @@
-from browser.controller import BrowserController
+from app.browser.controller import BrowserController
+from app.skills.extractors.amazon import _extract_amazon_details
 
-if __name__ == "__main__":
-    with BrowserController(run_dir="runs") as bc:
-        bc.goto("https://www.amazon.in/s?k=laptops+under+50000", timeout=60000)
-        bc.save_html("amazon_page.html")
-        print("✅ Saved Amazon search HTML to amazon_page.html")
+url = "https://www.amazon.in/Acer-i5-1334U-39-62cm-Windows-AL15-53/dp/B0DPXBHF8H/ref=sr_1_1_sspa?sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY"
+with BrowserController("runs/test") as bc:
+    specs = _extract_amazon_details(bc, url)
+    print(specs or "❌ No specs found")
