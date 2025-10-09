@@ -29,6 +29,7 @@ export default function ComparePage() {
           ids: selectedIds,
         });
         setData(res.data);
+        // console.log("The Product Link arrrrrreee:    ",data?.products[0].link);
       } catch (err: unknown) {
         if (err instanceof Error) {
           console.error("Compare error:", err.message);
@@ -69,6 +70,7 @@ export default function ComparePage() {
   }
 
   const { products, summary } = data;
+  console.log("The Products is: ", products[0]);
 
   return (
     <motion.div

@@ -13,6 +13,7 @@ export type ProductRecord = Product & {
   id: number;
   source?: string;
   specs?: string | null;
+  url?: string | null;
 };
 
 // ✅ Compare API response type

@@ -1,12 +1,18 @@
 import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 import type { ProductRecord } from "../types/product";
 
-export default function CompareTable({ products }: { products: ProductRecord[] }) {
-  const attributes: (keyof ProductRecord)[] = [
+export default function CompareTable({
+  products,
+}: {
+  products: ProductRecord[];
+}) {
+  // ✅ Show actual useful fields: price, rating, source, url, specs
+  const attributes: (keyof ProductRecord | "url")[] = [
     "price",
     "rating",
-    "site",
     "source",
+    "url",
     "specs",
   ];
 
@@ -34,7 +40,7 @@ export default function CompareTable({ products }: { products: ProductRecord[] }
                     alt={p.title}
                     className="w-20 h-20 object-cover rounded-lg mb-2 border border-gray-700"
                   />
-                  <p className="text-slate-100 text-sm font-medium line-clamp-2">
+                  <p className="text-slate-100 text-sm font-medium line-clamp-2 text-center">
                     {p.title}
                   </p>
                 </div>
@@ -46,22 +52,36 @@ export default function CompareTable({ products }: { products: ProductRecord[] }
           {attributes.map((attr) => (
             <tr key={attr} className="border-t border-gray-800">
               <td className="px-4 py-3 font-semibold text-slate-400 capitalize">
-                {attr}
+                {attr === "url" ? "Product Link" : attr}
               </td>
+
               {products.map((p) => (
                 <td key={`${p.id}-${attr}`} className="px-4 py-3 text-center">
                   {attr === "specs" ? (
                     <div className="text-xs text-slate-300 text-left whitespace-pre-wrap max-w-[250px] mx-auto">
                       {p.specs || "—"}
                     </div>
-                  ) : attr === "source" || attr === "site" ? (
+                  ) : attr === "source" ? (
                     <span className="capitalize text-cyan-400 font-medium">
-                      {p[attr] || "—"}
+                      {p.source || "—"}
                     </span>
                   ) : attr === "rating" ? (
                     <span className="text-yellow-400 font-medium">
                       ⭐ {p.rating || "—"}
                     </span>
+                  ) : attr === "url" ? ( // ✅ FIXED: correct check
+                    p.url ? (
+                      <a
+                        href={p.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 underline text-sm"
+                      >
+                        View <ExternalLink size={14} />
+                      </a>
+                    ) : (
+                      "—"
+                    )
                   ) : (
                     <span className="text-slate-200">{p[attr] || "—"}</span>
                   )}
