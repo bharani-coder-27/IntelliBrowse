@@ -1,53 +1,100 @@
 # app/db/crud.py
-from typing import List
-from sqlmodel import Session, select
-from app.db.models import SearchHistory, Product
 from typing import List, Optional
+from sqlmodel import Session, select
+from sqlalchemy import desc
+from app.db.models import Search, Product, History, User
 
-def add_search(session: Session, plan: dict, items: List[dict], paths: dict):
-    """Insert new search and related products"""
-    history = SearchHistory(
-        instruction=plan.get("instruction"),
-        query=plan.get("query"),
-        sources=",".join(plan.get("sources", [])),
-        intent=plan.get("intent", "shop"),
-        max_price=plan.get("max_price"),
-        result_count=len(items),
-        json_path=paths.get("json_path"),
-        csv_path=paths.get("csv_path"),
+
+# ------------------------------
+# 🔐 USERS
+# ------------------------------
+def get_user_by_email(session: Session, email: str) -> Optional[User]:
+    """Fetch a user by email."""
+    result = session.exec(select(User).where(User.email == email))
+    return result.first()
+
+
+def add_user(session: Session, name: str, email: str, password_hash: str) -> User:
+    """Create a new user record."""
+    user = User(name=name, email=email, password_hash=password_hash)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+# ------------------------------
+# 🔍 SEARCHES
+# ------------------------------
+def add_search(session: Session, plan: dict, results: list[dict], user_id: Optional[int] = None) -> Search:
+    """
+    Insert a search record + its associated products.
+    Used in orchestrate() after a successful agent run.
+    """
+    query_value: str = plan.get("query") or "unknown query"
+    intent_value: Optional[str] = plan.get("intent")
+    sources_value: Optional[str] = ",".join(plan.get("sources", [])) if plan.get("sources") else None
+    instruction_value: Optional[str] = plan.get("instruction")
+
+    search = Search(
+        user_id=user_id,
+        instruction=instruction_value,
+        query=query_value,
+        intent=intent_value,
+        sources=sources_value,
     )
+    session.add(search)
+    session.commit()
+    session.refresh(search)
+
+    # Save all extracted products linked to this search
+    for r in results:
+        product = Product(
+            search_id=search.id,
+            title=r.get("title", "N/A"),
+            price=r.get("price"),
+            rating=r.get("rating"),
+            url=r.get("url"),
+            source=r.get("source"),
+            image=r.get("image"),
+            specs=r.get("specs"),
+        )
+        session.add(product)
+    session.commit()
+
+    return search
+
+
+def get_products_by_search(session: Session, search_id: int) -> List[Product]:
+    """Get all products belonging to a particular search."""
+    result = session.exec(select(Product).where(Product.search_id == search_id))
+    return list(result.all())
+
+
+# ------------------------------
+# 🕓 HISTORY
+# ------------------------------
+def add_history(session: Session, user_id: int, query: str, intent: str) -> History:
+    """Record a user search query in history."""
+    history = History(user_id=user_id, query=query, intent=intent)
     session.add(history)
     session.commit()
     session.refresh(history)
-
-    # Store products
-    for item in items:
-        p = Product(
-            search_id=history.id,
-            title=item.get("title"),
-            price=item.get("price"),
-            price_value=item.get("price_value"),
-            rating=item.get("rating"),
-            link=item.get("link"),
-            site=item.get("site"),
-            image_path=item.get("image_path"),
-            proof_path=item.get("proof_path"),
-        )
-        session.add(p)
-    session.commit()
     return history
 
 
-def get_recent_searches(session: Session, limit=10, intent: Optional[str] = None):
-    from sqlmodel import select
-    stmt = select(SearchHistory)
+def get_recent_searches(
+    session: Session,
+    intent: Optional[str] = None,
+    user_id: Optional[int] = None
+) -> List[Search]:
+    """Fetch the 20 most recent searches for a user (optionally filtered by intent)."""
+    q = select(Search)
     if intent:
-        stmt = stmt.where(SearchHistory.intent == intent)
-    stmt = stmt.order_by(SearchHistory.created_at.desc()).limit(limit)
-    return session.exec(stmt).all()
+        q = q.where(Search.intent == intent)
+    if user_id:
+        q = q.where(Search.user_id == user_id)
 
-
-def get_products_by_search(session: Session, search_id: int):
-    """Return all products for a given search ID"""
-    stmt = select(Product).where(Product.search_id == search_id)
-    return session.exec(stmt).all()
+    q = q.order_by(desc(Search.__table__.c.created_at)).limit(20)
+    result = session.exec(q)
+    return list(result.all())

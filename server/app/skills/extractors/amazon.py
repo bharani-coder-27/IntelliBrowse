@@ -131,7 +131,7 @@ def extract_amazon_products(
                     "price_value": price_int if price_int is not None else 99999999,
                     "rating": rating,
                     "image": image, 
-                    "link": href,
+                    "link": href
                 }
             )
 

@@ -150,7 +150,7 @@ def extract_flipkart_products(
                     "price_value": price_int if price_int is not None else 99999999,
                     "rating": formatted_rating,
                     "image": image,
-                    "link": href,
+                    "link": href
                 }
             )
 

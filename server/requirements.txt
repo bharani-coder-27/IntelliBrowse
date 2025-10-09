@@ -1,9 +1,36 @@
-# requirements.txt
+# ---------------------------
+# AI Web Navigator Backend
+# ---------------------------
+
+# Core Framework
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
+starlette==0.37.2
+python-dotenv==1.0.1
+
+# Browser Automation & Web Parsing
 playwright==1.47.0
-sqlmodel==0.0.16
 requests==2.32.3
 beautifulsoup4==4.12.3
 lxml==5.3.0
-python-dotenv==1.0.1
+
+# Database ORM (SQLModel + SQLAlchemy)
+sqlmodel==0.0.22
+SQLAlchemy==2.0.34
+psycopg2-binary==2.9.9
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+bcrypt==4.1.2
+authlib
+itsdangerous
+passlib
+
+# Optional utilities
+anyio==4.4.0
+pandas==2.2.3
+reportlab==4.2.2
+
+# Dev tools (optional)
+pytest==8.3.3
+black==24.8.0
