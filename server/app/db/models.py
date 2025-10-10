@@ -42,6 +42,7 @@ class Product(SQLModel, table=True):
     source: Optional[str] = None
     image: Optional[str] = None
     specs: Optional[str] = None
+    text: Optional[str] = None
 
     search: Optional[Search] = Relationship(back_populates="products")
 

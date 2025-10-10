@@ -3,12 +3,11 @@ import { motion } from "framer-motion";
 import type { ResearchResult } from "../types/research";
 
 export default function ResultCard({ result }: { result: ResearchResult }) {
-  // Some links from DuckDuckGo start with "//"
-  const link = result.link?.startsWith("http")
-    ? result.link
-    : "https:" + result.link;
+  const link = result.url?.startsWith("http")
+    ? result.url
+    : `https://${result.url}`;
 
-  let domain = "Unknown Source";
+  let domain = "Wikipedia";
   try {
     domain = new URL(link).hostname.replace("www.", "");
   } catch {
@@ -25,14 +24,14 @@ export default function ResultCard({ result }: { result: ResearchResult }) {
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-semibold text-lg text-brand-500 hover:underline"
+        className="font-semibold text-lg text-cyan-400 hover:underline"
       >
         {result.title}
       </a>
 
       {/* Snippet */}
       <p className="text-slate-300 text-sm leading-relaxed mt-2">
-        {result.snippet}
+        {result.text}
       </p>
 
       {/* Source */}

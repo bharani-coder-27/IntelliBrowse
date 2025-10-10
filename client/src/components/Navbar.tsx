@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Folder, X, Clock } from "lucide-react";
 import ResultsGrid from "./ResultsGrid";
-import type { Product } from "../types/product";
+import type { Product, ProductRecord } from "../types/product";
 import { api } from "../lib/api"; // ✅ make sure this import is at top
+import ResultsList from "./ResultsList";
+import type { ResearchResult } from "../types/research";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -15,8 +17,12 @@ export default function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [history, setHistory] = useState<{ id: number; query: string; created_at: string }[]>([]);
-  const [historyResults, setHistoryResults] = useState<Product[]>([]);
+  const [history, setHistory] = useState<
+    { id: number; query: string; created_at: string }[]
+  >([]);
+  const [historyResults, setHistoryResults] = useState<
+    ProductRecord[] | ResearchResult[]
+  >([]);
 
   const handleLogout = async () => {
     await logout();
@@ -27,31 +33,46 @@ export default function Navbar() {
     if (menuOpen) fetchHistory();
   }, [menuOpen]);
 
+  // 🧠 Fetch search history
+  const fetchHistory = async () => {
+    try {
+      const res = await api.get("/history");
+      setHistory(res.data.history || []);
+    } catch (err) {
+      console.error("❌ Failed to fetch history:", err);
+    }
+  };
 
-// 🧠 Fetch search history
-const fetchHistory = async () => {
-  try {
-    const res = await api.get("/history");
-    setHistory(res.data || []);
-  } catch (err) {
-    console.error("❌ Failed to fetch history:", err);
-  }
-};
+  // 🧠 Fetch products for a specific history entry
+  const [historyMode, setHistoryMode] = useState<"product" | "research" | null>(
+    null
+  );
 
-// 🧠 Fetch products for a specific history entry
-const handleHistoryClick = async (searchId: number) => {
-  try {
-    const res = await api.get(`/products/${searchId}`);
-    const data = res.data;
-    setHistoryResults(data.products || []);
-    setHasResults(true);
-    setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  } catch (err) {
-    console.error("❌ Failed to fetch products from history:", err);
-  }
-};
+  const handleHistoryClick = async (searchId: number) => {
+    try {
+      const res = await api.get(`/products/${searchId}`);
+      const data = res.data;
 
+      // ✅ Get intent
+      const intent = data.intent || "shop";
+
+      if (intent === "explore" || intent === "learn") {
+        // Research / informational layout
+        setHistoryMode("research");
+        setHistoryResults(data.items || []);
+      } else {
+        // Product layout
+        setHistoryMode("product");
+        setHistoryResults(data.items || []);
+      }
+
+      setHasResults(true);
+      setMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("❌ Failed to fetch products from history:", err);
+    }
+  };
 
   return (
     <>
@@ -197,9 +218,15 @@ const handleHistoryClick = async (searchId: number) => {
       </AnimatePresence>
 
       {/* 🧾 History Results */}
+      {/* 🧾 History Results */}
+      {/* 🧾 History Results */}
       {historyResults.length > 0 && (
         <div className="pt-20">
-          <ResultsGrid items={historyResults} />
+          {historyMode === "product" ? (
+            <ResultsGrid items={historyResults as ProductRecord[]} />
+          ) : (
+            <ResultsList results={historyResults as ResearchResult[]} />
+          )}
         </div>
       )}
     </>

@@ -40,58 +40,51 @@ export default function SearchDock({
       // ------------------------------
       const rawIds: number[] = data.product_ids ?? [];
 
-      // 🧠 Type guard for product arrays
       const isProductArray = (arr: unknown): arr is Product[] =>
         Array.isArray(arr) &&
         arr.length > 0 &&
         typeof (arr[0] as Product).title === "string" &&
         typeof (arr[0] as Product).price === "string";
 
-      // Safely determine items source
       const rawItems: Product[] = isProductArray(data.items)
         ? data.items
         : isProductArray(data.results)
         ? data.results
         : [];
 
-      // ✅ Merge products with DB IDs
       const mergedProducts: ProductRecord[] = rawItems.map((item, i) => ({
         ...item,
-        id: rawIds[i] ?? i + 1, // fallback if backend missing some IDs
+        id: rawIds[i] ?? i + 1,
       }));
 
       console.log("✅ Merged products:", mergedProducts);
 
-      // ✅ Save globally
       setLastResponse(data);
       setProducts(mergedProducts);
       setHasResults(mergedProducts.length > 0);
 
-      // ✅ Notify parent if needed
       onResults(data);
 
       toast.success("✅ Results loaded successfully!", { id: loadingToast });
     } catch (err: unknown) {
       const error = err as AxiosError<{ detail?: string }>;
 
-      // Axios-based errors
       if (axios.isAxiosError(error)) {
         const msg =
           error.response?.data?.detail ||
           error.message ||
           "❌ Something went wrong.";
         toast.error(msg, { id: loadingToast });
-      }
-      // Other runtime or parsing errors
-      else if (err instanceof Error) {
+      } else if (err instanceof Error) {
         toast.error(`❌ ${err.message}`, { id: loadingToast });
         console.error("Non-Axios error:", err);
-      }
-      // Fallback safety
-      else {
+      } else {
         toast.error("❌ Unknown error occurred.", { id: loadingToast });
         console.error("Unrecognized error:", err);
       }
+    } finally {
+      // ✅ Always stop the loading spinner
+      setLoading(false);
     }
   };
 

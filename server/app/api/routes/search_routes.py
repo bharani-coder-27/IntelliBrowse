@@ -74,7 +74,7 @@ def orchestrate(body: dict, user_id: int = Depends(get_current_user)):   # int =
             for src in plan["sources"]:
                 results += extract_products_or_info(None, src, plan["query"], plan["max_results"])
         
-        print("The First Result Response: ", results[0])
+        # print("The First Result Response: ", results[0])
 
         if not results:
             print("⚠️ No results fetched for:", plan["query"])
@@ -102,7 +102,7 @@ def orchestrate(body: dict, user_id: int = Depends(get_current_user)):   # int =
             product_rows = get_products_by_search(session, search_id)
             product_ids = [p.id for p in product_rows]
 
-        print("These are the product IDs: ",product_ids)
+        # print("These are the product IDs: ",product_ids)
         # ✅ unified structured response
         return {
             "plan": plan,

@@ -34,3 +34,7 @@ reportlab==4.2.2
 # Dev tools (optional)
 pytest==8.3.3
 black==24.8.0
+
+#new
+pydantic[email]
+email-validator

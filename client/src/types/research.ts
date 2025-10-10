@@ -1,7 +1,7 @@
 // src/types/research.ts
 export interface ResearchResult {
   title: string;
-  snippet: string;
-  link: string;
-  site?: string;
+  url: string;        // ✅ Wikipedia or info source link
+  text: string;       // ✅ Extracted main content
+  site?: string;      // optional for labeling
 }

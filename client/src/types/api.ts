@@ -13,15 +13,21 @@ export interface SearchPlan {
 export interface SearchResponse {
   plan: SearchPlan;
   total: number;
+  message?: string;
+
+  // ✅ added: backend returns this always
+  search_id: number;
+
+  // ✅ optional download fields
   json_path?: string;
   csv_path?: string;
   download_json?: string;
   download_csv?: string;
 
-  // ✅ new field from backend for DB product IDs
+  // ✅ product id list from DB
   product_ids?: number[];
 
-  // ✅ result arrays
+  // ✅ data results — could be either Product[] or ResearchResult[]
   results?: Product[] | ResearchResult[];
   items?: Product[] | ResearchResult[];
 }
