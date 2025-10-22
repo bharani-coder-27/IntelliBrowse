@@ -35,26 +35,9 @@ IntelliBrowse uses a **local LLM (Ollama + Mistral)** to convert natural-languag
 ## 🏗️ c) System Architecture
 
 ### 🧩 Architecture Diagram / Workflow
-```
 
-User Query
-│
-▼
-React + Tailwind Frontend ──► FastAPI Backend ──► LLM Planner (Ollama + Mistral)
-│
-▼
-Playwright Browser
-│
-▼
-Data Extraction Layer
-│
-▼
-SQLite Database (navigator.db)
-│
-▼
-Structured Results → JSON/CSV → Download UI
+![System Architecture Flowchart](client/public/flowchart.jpg)
 
-````
 
 ### 🔁 Data Flow Explanation  
 1. **Input:** User submits a query in plain English.  
