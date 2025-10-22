@@ -122,7 +122,6 @@ Structured Results → JSON/CSV → Download UI
   ollama run mistral &
   uvicorn app.main:app --reload
   npm run dev
-````
 
 ## 🧪 h) Performance & Validation
 
